@@ -1,0 +1,22 @@
+# Env
+.env
+
+# Go build artifacts
+*.exe
+*.test
+*.out
+
+# Local generated/original media (keep the dirs via .gitkeep, ignore contents)
+src/data/originals/*
+src/data/generated/*
+!src/data/originals/.gitkeep
+!src/data/generated/.gitkeep
+
+# Node / frontend
+src/web/node_modules/
+src/web/dist/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
