@@ -9,6 +9,8 @@
 // but keep the package free of transport/storage details.
 package domain
 
+import "fmt"
+
 // OutputFormat identifies an encoded image format.
 //
 // TODO (story 02): decide the set of supported formats and add a Valid method.
@@ -47,8 +49,25 @@ type MediaProfile struct {
 	ResizeMode   ResizeMode
 	Format       OutputFormat
 	Quality      int  // 1..100, meaningful for JPEG
-	AllowEnlarge bool // may the output be larger than the source?
 	// TODO (story 02): add fields you need and remove ones you don't.
+}
+
+func (v ResizeMode) Valid() bool {
+	switch v {
+		case ResizeCrop, ResizeFit:
+			return true
+		default:
+			return false
+	}
+}
+
+func (v OutputFormat) Valid() bool {
+	switch v {
+		case FormatJPEG, FormatPNG:
+			return true
+		default:
+			return false
+	}
 }
 
 // Validate reports whether the profile is well-formed.
@@ -56,14 +75,41 @@ type MediaProfile struct {
 // TODO (story 02): reject non-positive width/height, out-of-range quality,
 // unknown resize modes, and unknown formats. Return a descriptive error.
 func (p MediaProfile) Validate() error {
-	return ErrNotImplemented
+	if p.Width <= 0 || p.Height <= 0 {
+		return fmt.Errorf("width and height must be >= 0: %d width, %d height", p.Width, p.Height)
+	}
+	if p.Quality < 1 || p.Quality > 100 {
+		return fmt.Errorf("quality must be between 1 and 100: %d quality", p.Quality)
+	}
+	
+	if !p.ResizeMode.Valid() {
+		return fmt.Errorf("unknown resizeMode: %q", p.ResizeMode)
+	}
+
+	if !p.Format.Valid() {
+		return fmt.Errorf("unknown format: %q", p.Format)
+	}
+
+	return nil
 }
 
 // ValidateProfiles checks a set of profiles, including that names are unique.
 //
 // TODO (story 02): reject duplicate profile names and any invalid profile.
 func ValidateProfiles(profiles []MediaProfile) error {
-	return ErrNotImplemented
+	seen := make(map[string]bool)
+
+	for _, p := range profiles {
+		if err := p.Validate(); err != nil {
+			return err
+		}
+		if seen[p.Name] {
+			return fmt.Errorf("duplicate profile name: %q", p.Name)
+		}
+		seen[p.Name] = true
+	}
+
+	return nil
 }
 
 // SourceImage describes a decoded input image (not its pixels — just the facts
