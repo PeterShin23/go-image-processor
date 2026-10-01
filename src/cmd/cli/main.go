@@ -6,6 +6,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 )
@@ -22,6 +23,37 @@ func main() {
 // TODO (story 04): parse --input/--output/--profiles, validate the input path,
 // open the file, and hand it to the application service.
 func run() error {
-	fmt.Println("cli: not implemented yet")
+	input := flag.String("input", "", "path to source image")
+	output := flag.String("output", "./data/generated", "output directory")
+	profiles := flag.String("profiles", "", "profiles to generate (ignored til later)")
+	flag.Parse()
+
+	// Just a way to pass the compiler as a "usage"
+	_ = output
+	_ = profiles
+
+	if *input == "" {
+		return fmt.Errorf("Input (--input) is required.")
+	}
+
+	info, err := os.Stat(*input)
+	if err != nil {
+		return fmt.Errorf("input %q: %w", *input, err)
+	}
+	if info.IsDir() {
+		return fmt.Errorf("input %q is a directory, not a file", *input)
+	}
+	if !info.Mode().IsRegular() {
+		return fmt.Errorf("inptu %q is not a regular file: %w", *input, err)
+	}
+
+	f, err := os.Open(*input)
+	if err != nil {
+		return fmt.Errorf("open %q: %w", *input, err)
+	}
+	defer f.Close()
+
+	fmt.Printf("file: %q", *input)
+
 	return nil
 }
